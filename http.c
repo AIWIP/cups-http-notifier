@@ -147,10 +147,8 @@
         if (state <= IPP_IDLE)
             break;
 
-        // TODO: Generate body from attributes
         generate_request_body(event, request_body);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body);
-        
 
         res = curl_easy_perform(curl);
 
