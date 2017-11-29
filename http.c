@@ -21,8 +21,45 @@
   * Local functions...
   */
  
- void print_attributes(ipp_t *ipp, int indent);
- 
+  /*
+   * 'generate_request_body()' - Generate request body for webhook...
+   */
+
+  char *generate_request_body(ipp_t *ipp, //* I - IPP request *
+                              char *body) //* B - Body of webhook request *
+  {
+    ipp_tag_t		    group;		    /* Current group */
+    ipp_attribute_t	*attr;		    /* Current attribute */
+    char			    buffer[1024];	  /* Value buffer */
+    int indent = 0;
+
+    for (group = IPP_TAG_ZERO, attr = ipp->attrs; attr; attr = attr->next)
+    {
+      // strcpy(body, "these ");
+      if ((attr->group_tag == IPP_TAG_ZERO && indent <= 8) || !attr->name)
+      {
+        group = IPP_TAG_ZERO;
+        strcpy(body, '\n');
+        strcpy(body, buffer);
+        continue;
+      }
+
+      if (group != attr->group_tag)
+      {
+        group = attr->group_tag;
+
+        sprintf(body, "DEBUG: %*s%s:\n\n", indent - 4, "", ippTagString(group));
+        strcpy(body, buffer);
+      }
+
+      ippAttributeString(attr, buffer, sizeof(buffer));
+
+      sprintf(body, "DEBUG: %*s%s (%s%s) %s\n", indent, "", attr->name,
+              attr->num_values > 1 ? "1setOf " : "",
+              ippTagString(attr->value_tag), buffer);
+      strcpy(body, buffer);
+    }
+  }
  
  /*
   * 'main()' - Read events and send HTTP notifications.
@@ -41,10 +78,10 @@
     struct sigaction	  action;		          /* POSIX sigaction data */
     ipp_t		            *event;			        /* Event from scheduler */
     ipp_state_t	        state;			        /* IPP event state */
-    int		              exit_status;		    /* Exit status */
     CURL                *curl;              /* CURL HTTP Client */
     CURLcode            res;                /* HTTP Response */
     char		            baseurl[1024];		  /* Base URL */
+    char                request_body[40000];      /* Body for webhook request */
 
     /*
      * Don't buffer stderr...
@@ -78,6 +115,9 @@
 
     curl = curl_easy_init();
 
+       
+    httpAssembleURI(HTTP_URI_CODING_ALL, baseurl, sizeof(baseurl), scheme, NULL, host, port, resource);
+
     curl_easy_setopt(curl, CURLOPT_URL, baseurl);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
  
@@ -108,8 +148,9 @@
             break;
 
         // TODO: Generate body from attributes
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "name=daniel&project=curl");
-        print_attributes(event, 4);
+        generate_request_body(event, request_body);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body);
+        
 
         res = curl_easy_perform(curl);
 
@@ -122,47 +163,15 @@
          * Free the memory used for this event...
          */
 
-        curl_easy_cleanup(curl);
+        if (request_body)
+          free(request_body);
+
+        if (curl)
+          curl_easy_cleanup(curl);
+
         ippDelete(event);
         event = NULL;
     }
 
     return (0);
  }
-
-
-/*
- * 'print_attributes()' - Print the attributes in a request...
- */
-
-void
-print_attributes(ipp_t *ipp,		/* I - IPP request */
-                 int   indent)		/* I - Indentation */
-{
-  ipp_tag_t		    group;		    /* Current group */
-  ipp_attribute_t	*attr;		    /* Current attribute */
-  char			    buffer[1024];	/* Value buffer */
-
-  for (group = IPP_TAG_ZERO, attr = ipp->attrs; attr; attr = attr->next)
-  {
-    if ((attr->group_tag == IPP_TAG_ZERO && indent <= 8) || !attr->name)
-    {
-      group = IPP_TAG_ZERO;
-      fputc('\n', stderr);
-      continue;
-    }
-
-    if (group != attr->group_tag)
-    {
-      group = attr->group_tag;
-
-      fprintf(stderr, "DEBUG: %*s%s:\n\n", indent - 4, "", ippTagString(group));
-    }
-
-    ippAttributeString(attr, buffer, sizeof(buffer));
-
-    fprintf(stderr, "DEBUG: %*s%s (%s%s) %s\n", indent, "", attr->name,
-            attr->num_values > 1 ? "1setOf " : "",
-	    ippTagString(attr->value_tag), buffer);
-  }
-}
