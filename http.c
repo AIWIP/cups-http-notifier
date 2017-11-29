@@ -12,7 +12,9 @@
 
 #define _IPP_PRIVATE_STRUCTURES 1
 
+#include <curl/curl.h>
 #include <cups/cups.h>
+#include <signal.h>
 #include <stdio.h>
  
  /*
@@ -26,21 +28,23 @@
   * 'main()' - Read events and send HTTP notifications.
   */
  
- int					    /* O - Exit status */
- main(int  argc,			/* I - Number of command-line arguments */
-      char *argv[])			/* I - Command-line arguments */
+ int					                              /* O - Exit status */
+ main(int  argc,			                      /* I - Number of command-line arguments */
+      char *argv[])			                    /* I - Command-line arguments */
  {
-    int		            i;			            /* Looping var */
-    char                scheme[32],		        /* URI scheme ("http") */
-                        host[1024],		        /* Hostname for remote HTTP  */
-                        username[256],		    /* Username for remote HTTP */
-                        resource[1024];		    /* HTTP endpoint */
-    http_t	            *http;			        /* Connection to remote server */
-    int		            port;			        /* Port number for remote HTTP */
-    http_status_t	    status;	                /* HTTP GET/PUT status code */
-    struct sigaction	action;		            /* POSIX sigaction data */
-    ipp_t		        *event;			        /* Event from scheduler */
+    int		              i;			            /* Looping var */
+    char                scheme[32],		      /* URI scheme ("http") */
+                        host[1024],		      /* Hostname for remote HTTP  */
+                        username[256],		  /* Username for remote HTTP */
+                        resource[1024];		  /* HTTP endpoint */
+    int		              port;			          /* Port number for remote HTTP */
+    struct sigaction	  action;		          /* POSIX sigaction data */
+    ipp_t		            *event;			        /* Event from scheduler */
     ipp_state_t	        state;			        /* IPP event state */
+    int		              exit_status;		    /* Exit status */
+    CURL                *curl;              /* CURL HTTP Client */
+    CURLcode            res;                /* HTTP Response */
+    char		            baseurl[1024];		  /* Base URL */
 
     /*
      * Don't buffer stderr...
@@ -58,6 +62,7 @@
     fprintf(stderr, "DEBUG: argc=%d\n", argc);
     for (i = 0; i < argc; i ++)
       fprintf(stderr, "DEBUG: argv[%d]=\"%s\"\n", i, argv[i]);
+    fprintf(stderr, "DEBUG: TMPDIR=\"%s\"\n", getenv("TMPDIR"));
 
     /*
      * See whether the HTTP Endpoint is based locally or remotely...
@@ -71,14 +76,18 @@
         return (1);
     }
 
-    http = httpConnect(host, port);
+    curl = curl_easy_init();
 
+    curl_easy_setopt(curl, CURLOPT_URL, baseurl);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+ 
     /*
      * Loop forever until we run out of events...
      */
 
     for (;;)
     {
+
         /*
          * Read the next event...
          */
@@ -96,23 +105,29 @@
             fputs("DEBUG: ippReadFile() returned IPP_ERROR!\n", stderr);
 
         if (state <= IPP_IDLE)
-        {
-            /*
-            * Out of events, free memory and then exit...
-            */
-    
-            ippDelete(event);
-            return (0);
-        }
+            break;
 
+        // TODO: Generate body from attributes
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "name=daniel&project=curl");
         print_attributes(event, 4);
+
+        res = curl_easy_perform(curl);
+
+        if(res != CURLE_OK)
+            fprintf(stderr, "curl_easy_perform() failed: %s\n",
+            curl_easy_strerror(res));
+            exit(0);
 
         /*
          * Free the memory used for this event...
          */
 
+        curl_easy_cleanup(curl);
         ippDelete(event);
+        event = NULL;
     }
+
+    return (0);
  }
 
 
@@ -127,7 +142,6 @@ print_attributes(ipp_t *ipp,		/* I - IPP request */
   ipp_tag_t		    group;		    /* Current group */
   ipp_attribute_t	*attr;		    /* Current attribute */
   char			    buffer[1024];	/* Value buffer */
-
 
   for (group = IPP_TAG_ZERO, attr = ipp->attrs; attr; attr = attr->next)
   {
