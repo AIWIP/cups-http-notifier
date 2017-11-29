@@ -1,3 +1,6 @@
-all:
+.PHONY: build
+
+build:
+	rm -rf build
 	mkdir build
-	gcc http.c -o build/http
+	gcc -o build/http `cups-config --cflags` http.c `cups-config --libs`
