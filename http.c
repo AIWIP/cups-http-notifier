@@ -30,7 +30,7 @@
   {
     ipp_tag_t		    group;		    /* Current group */
     ipp_attribute_t	*attr;		    /* Current attribute */
-    char			    buffer[1024];	  /* Value buffer */
+    char			    buffer[1024] = "";	  /* Value buffer */
     int indent = 0;
 
     for (group = IPP_TAG_ZERO, attr = ipp->attrs; attr; attr = attr->next)
@@ -39,8 +39,8 @@
       if ((attr->group_tag == IPP_TAG_ZERO && indent <= 8) || !attr->name)
       {
         group = IPP_TAG_ZERO;
-        strcpy(body, '\n');
-        strcpy(body, buffer);
+        strcpy(buffer, '\n');
+        strcat(body, buffer);
         continue;
       }
 
@@ -48,16 +48,16 @@
       {
         group = attr->group_tag;
 
-        sprintf(body, "DEBUG: %*s%s:\n\n", indent - 4, "", ippTagString(group));
-        strcpy(body, buffer);
+        sprintf(buffer, "DEBUG: %*s%s:\n\n", indent - 4, "", ippTagString(group));
+        strcat(body, buffer);
       }
 
       ippAttributeString(attr, buffer, sizeof(buffer));
 
-      sprintf(body, "DEBUG: %*s%s (%s%s) %s\n", indent, "", attr->name,
+      sprintf(buffer, "DEBUG: %*s%s (%s%s) %s\n", indent, "", attr->name,
               attr->num_values > 1 ? "1setOf " : "",
               ippTagString(attr->value_tag), buffer);
-      strcpy(body, buffer);
+      strcat(body, buffer);
     }
   }
  
@@ -148,6 +148,7 @@
             break;
 
         generate_request_body(event, request_body);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request_body);
 
         res = curl_easy_perform(curl);
