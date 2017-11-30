@@ -45,8 +45,6 @@
     json_object *message_value = json_object_new_string(cupsNotifyText(lang, ipp));
     json_object_object_add(request_json, "message", message_value);
 
-    // TODO: Write test and come up with spec and document this tool
-    //
     for (group = IPP_TAG_ZERO, attr = ipp->attrs; attr; attr = attr->next)
     {
       if (attr->group_tag == IPP_TAG_ZERO || !attr->name)
