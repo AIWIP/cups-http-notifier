@@ -29,11 +29,21 @@
   char *generate_request_body(ipp_t *ipp, //* I - IPP request *
                               char *body) //* B - Body of webhook request *
   {
-    ipp_tag_t		    group;		    /* Current group */
-    ipp_attribute_t	*attr;		    /* Current attribute */
-    char			      buffer[1024];	  /* Value buffer */
-    json_object     *request_json = json_object_new_object();
-    json_object     *group_json = request_json;
+    cups_lang_t	    *lang;			                              /* Language info */
+    ipp_tag_t		    group;		                                /* Current group */
+    ipp_attribute_t	*attr;		                                /* Current attribute */
+    char			      buffer[1024];	                            /* Value buffer */
+    json_object     *request_json = json_object_new_object(); /* Root JSON object */
+    json_object     *group_json = request_json;               /* Current JSON object for attributes */
+
+    if ((lang = cupsLangDefault()) == NULL)
+      exit(1);
+
+    json_object *subject_value = json_object_new_string(cupsNotifySubject(lang, ipp));
+    json_object_object_add(request_json, "subject", subject_value);
+
+    json_object *message_value = json_object_new_string(cupsNotifyText(lang, ipp));
+    json_object_object_add(request_json, "message", message_value);
 
     // TODO: Write test and come up with spec and document this tool
     //
