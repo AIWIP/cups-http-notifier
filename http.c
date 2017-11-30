@@ -129,7 +129,7 @@
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
 
-    curl_easy_setopt(easyhandle, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_URL, baseurl);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
  
