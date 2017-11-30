@@ -1,3 +1,22 @@
-# cups-http
+# cups-http-notifier
 
-TODO: Implement documentation here
+This is a low effort alternative to the `dbus` notifier that ships with CUPS.
+
+This codebase implements a HTTP notifier for CUPs which allows you to consume IPP subscription events
+via JSON over HTTP.
+
+Just register a subscription using the CUPS API using the `http` protocol pointed to your webhook
+endpoint on your webserver in order to recieve these events.
+
+We currently only support JSON as the payload for the webhook event, if you require any other formats
+please open an issue or submit a pull request.
+
+This code is built for the Linux operating system only and currently lacks support for OS X.
+
+# How to build
+
+- Make sure you have `build-essential` and `cup` installed on your operating system
+- `sudo ./configure`
+- `make`
+
+After following the steps above run `sudo make install` to install the notifier in CUPS.
