@@ -15,7 +15,7 @@ This code is built for the Linux operating system only and currently lacks suppo
 
 # How to build
 
-- Make sure you have `build-essential` and `cup` installed on your operating system
+- Make sure you have `build-essential` and `cups` installed on your operating system
 - `sudo ./configure`
 - `make`
 
