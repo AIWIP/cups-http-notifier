@@ -3,7 +3,7 @@
 build:
 	rm -rf build
 	mkdir build
-	gcc -o build/http `cups-config --cflags` http.c `cups-config --libs` -lcurl
+	gcc -o build/http `cups-config --cflags` http.c `cups-config --libs` -lcurl -ljson-c
 
 install:
 	cp build/http  /usr/lib/cups/notifier/

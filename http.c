@@ -14,6 +14,7 @@
 
 #include <curl/curl.h>
 #include <cups/cups.h>
+#include <json-c/json.h>
 #include <signal.h>
 #include <stdio.h>
  
@@ -30,17 +31,17 @@
   {
     ipp_tag_t		    group;		    /* Current group */
     ipp_attribute_t	*attr;		    /* Current attribute */
-    char			    buffer[1024] = "";	  /* Value buffer */
-    int indent = 0;
+    char			      buffer[1024];	  /* Value buffer */
+    json_object     *request_json = json_object_new_object();
+    json_object     *group_json = request_json;
 
+    // TODO: Write test and come up with spec and document this tool
+    //
     for (group = IPP_TAG_ZERO, attr = ipp->attrs; attr; attr = attr->next)
     {
-      // strcpy(body, "these ");
-      if ((attr->group_tag == IPP_TAG_ZERO && indent <= 8) || !attr->name)
+      if (attr->group_tag == IPP_TAG_ZERO || !attr->name)
       {
         group = IPP_TAG_ZERO;
-        strcpy(buffer, '\n');
-        strcat(body, buffer);
         continue;
       }
 
@@ -48,17 +49,16 @@
       {
         group = attr->group_tag;
 
-        sprintf(buffer, "DEBUG: %*s%s:\n\n", indent - 4, "", ippTagString(group));
-        strcat(body, buffer);
+        group_json = json_object_new_object();
+        json_object_object_add(request_json, ippTagString(group), group_json);
       }
 
       ippAttributeString(attr, buffer, sizeof(buffer));
-
-      sprintf(buffer, "DEBUG: %*s%s (%s%s) %s\n", indent, "", attr->name,
-              attr->num_values > 1 ? "1setOf " : "",
-              ippTagString(attr->value_tag), buffer);
-      strcat(body, buffer);
+      json_object *json_value = json_object_new_string(buffer);
+      json_object_object_add(group_json, (char *)attr->name, json_value);
     }
+
+    strcpy(body, json_object_to_json_string(request_json));
   }
  
  /*
