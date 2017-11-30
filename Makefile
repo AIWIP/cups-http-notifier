@@ -1,9 +1,5 @@
 .PHONY: build install
 
-# TODO: Write configure script 
-#
-# DEPENDENCIES = libjson-c-dev libcurl4-openssl-dev
-
 build:
 	rm -rf build
 	mkdir build
