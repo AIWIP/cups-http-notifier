@@ -88,6 +88,7 @@
     ipp_state_t	        state;			        /* IPP event state */
     CURL                *curl;              /* CURL HTTP Client */
     CURLcode            res;                /* HTTP Response */
+    struct curl_slist   *headers=NULL;      /* HTTP Headers */
     char		            baseurl[1024];		  /* Base URL */
     char                request_body[40000];      /* Body for webhook request */
 
@@ -126,6 +127,9 @@
        
     httpAssembleURI(HTTP_URI_CODING_ALL, baseurl, sizeof(baseurl), scheme, NULL, host, port, resource);
 
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(easyhandle, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_URL, baseurl);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
  
@@ -175,6 +179,8 @@
 
         if (curl)
           curl_easy_cleanup(curl);
+
+        curl_slist_free_all(headers);
 
         ippDelete(event);
         event = NULL;
