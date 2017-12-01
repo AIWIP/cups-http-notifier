@@ -1,5 +1,5 @@
 # !/bin/sh
-DEPENDENCIES=libcurl4-openssl-dev libcups2-dev libjson-c-dev libcurl4-openssl-dev
+DEPENDENCIES="libcurl4-openssl-dev libcups2-dev libjson-c-dev libcurl4-openssl-dev"
 echo "Installing Dependencies..."
 apt-get update
 apt-get install -y $DEPENDENCIES
