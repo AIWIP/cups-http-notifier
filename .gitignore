@@ -1,3 +1,5 @@
 build/
 .vagrant/
 .vscode/
+.pyc
+.pycache/
