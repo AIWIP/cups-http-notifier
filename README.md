@@ -13,6 +13,10 @@ please open an issue or submit a pull request.
 
 This code is built for the Linux operating system only and currently lacks support for OS X.
 
+# Examples
+
+In `examples` you can find a small python application to test out subscriptions with cups.
+
 # How to build
 
 - Make sure you have `build-essential` and `cups` installed on your operating system
