@@ -13,4 +13,11 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "ubuntu/trusty64"
+
+  config.vm.provision "shell", inline: <<-END
+    sudo apt-get update
+    sudo apt-get install -y cup build-essential
+    /vagrant/configure
+  END
+
 end
