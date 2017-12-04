@@ -15,7 +15,11 @@ This code is built for the Linux operating system only and currently lacks suppo
 
 # Examples
 
-In `examples` you can find a small python application to test out subscriptions with cups.
+In `examples` you can find a implementation of a webhook written in python. This application
+will simply register a subscription with cups for the HTTP notifier and log any events it
+recieves.
+
+You can trigger events by add or removing printers as well as submitting jobs.
 
 # How to build
 
