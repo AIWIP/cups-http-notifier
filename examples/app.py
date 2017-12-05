@@ -2,7 +2,6 @@ import cups
 import json
 import logging
 
-from api import APIController
 from flask import Flask, request
 
 logger = logging.getLogger(__name__)
@@ -14,14 +13,18 @@ def create_cups_subscription(connection):
     # sure we only have one which points to this
     # webhook
     #
-    for subscription in connection.getSubscriptions("/"):
-        connection.cancelSubscription(subscription["notify-subscription-id"])
-
-    connection.createSubscription(
+    current_subscription_id = connection.createSubscription(
         uri='/',
         recipient_uri='http://localhost:8000',
         events=['all']
     )
+
+    for subscription in connection.getSubscriptions("/"):
+        subscription_id = subscription["notify-subscription-id"]
+
+        if subscription_id != current_subscription_id:
+            connection.cancelSubscription(subscription_id)
+
 
 @flask_app.route("/")
 def index():
