@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "shell", inline: <<-END
     sudo apt-get update
-    sudo apt-get install -y python cup build-essential
+    sudo apt-get install -y python python-dev python-pip cups build-essential
     /vagrant/configure
   END
 

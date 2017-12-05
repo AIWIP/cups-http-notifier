@@ -67,11 +67,12 @@
           attr->value_tag == IPP_TAG_BOOLEAN ||
           attr->value_tag == IPP_TAG_ENUM )
       {
-        json_value = json_object_new_int(attr->value);
+        json_value = json_object_new_int(ippGetInteger(attr, 0));
       }
 
       // All Other Values
       else
+      {
         ippAttributeString(attr, buffer, sizeof(buffer));
         json_value = json_object_new_string(buffer);
       }
