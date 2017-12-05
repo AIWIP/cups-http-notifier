@@ -23,7 +23,6 @@ You can trigger events by add or removing printers as well as submitting jobs.
 
 # How to build
 
-- Make sure you have `build-essential` and `cups` installed on your operating system
 - `sudo ./configure`
 - `make`
 
