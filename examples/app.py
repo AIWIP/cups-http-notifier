@@ -15,7 +15,7 @@ def create_cups_subscription(connection):
     #
     current_subscription_id = connection.createSubscription(
         uri='/',
-        recipient_uri='http://localhost:8000',
+        recipient_uri='http://localhost:5000',
         events=['all']
     )
 
@@ -37,8 +37,8 @@ def webhook():
     event = notification["event-notification-attributes-tag"]
     event_type = event["notify-subscribed-event"]
 
-    logger.info('Recieved {} event from CUPS'.format(event_type))
-    logger.info(event)
+    print('Recieved {} event from CUPS'.format(event_type))
+    print(event)
 
     return u"OK"
 
