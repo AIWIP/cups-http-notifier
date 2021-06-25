@@ -10,18 +10,16 @@
  * Include necessary headers...
  */
 
-#define _IPP_PRIVATE_STRUCTURES 1
-
 #include <curl/curl.h>
 #include <cups/cups.h>
 #include <json-c/json.h>
 #include <signal.h>
 #include <stdio.h>
- 
+
  /*
   * Local functions...
   */
- 
+
   /*
    * 'generate_request_body()' - Generate request body for webhook...
    */
@@ -46,26 +44,26 @@
     json_object *message_value = json_object_new_string(cupsNotifyText(lang, ipp));
     json_object_object_add(request_json, "message", message_value);
 
-    for (group = IPP_TAG_ZERO, attr = ipp->attrs; attr; attr = attr->next)
+    for (group = IPP_TAG_ZERO, attr = ippFirstAttribute(ipp); attr; attr = ippNextAttribute(ipp))
     {
-      if (attr->group_tag == IPP_TAG_ZERO || !attr->name)
+      if (ippGetGroupTag(attr) == IPP_TAG_ZERO || !ippGetName(attr))
       {
         group = IPP_TAG_ZERO;
         continue;
       }
 
-      if (group != attr->group_tag)
+      if (group != ippGetGroupTag(attr))
       {
-        group = attr->group_tag;
+        group = ippGetGroupTag(attr);
 
         group_json = json_object_new_object();
         json_object_object_add(request_json, ippTagString(group), group_json);
       }
 
       // Integer, Boolean or Enum
-      if (attr->value_tag == IPP_TAG_INTEGER ||
-          attr->value_tag == IPP_TAG_BOOLEAN ||
-          attr->value_tag == IPP_TAG_ENUM )
+      if (ippGetValueTag(attr) == IPP_TAG_INTEGER ||
+          ippGetValueTag(attr) == IPP_TAG_BOOLEAN ||
+          ippGetValueTag(attr) == IPP_TAG_ENUM )
       {
         json_value = json_object_new_int(ippGetInteger(attr, 0));
       }
@@ -76,17 +74,17 @@
         ippAttributeString(attr, buffer, sizeof(buffer));
         json_value = json_object_new_string(buffer);
       }
-      
-      json_object_object_add(group_json, (char *)attr->name, json_value);
+
+      json_object_object_add(group_json, (char *)ippGetName(attr), json_value);
     }
 
     strcpy(body, json_object_to_json_string(request_json));
   }
- 
+
  /*
   * 'main()' - Read events and send HTTP notifications.
   */
- 
+
  int					                              /* O - Exit status */
  main(int  argc,			                      /* I - Number of command-line arguments */
       char *argv[])			                    /* I - Command-line arguments */
@@ -110,7 +108,7 @@
      * Don't buffer stderr...
      */
     setbuf(stderr, NULL);
-    
+
     /*
      * Ignore SIGPIPE signals...
      */
@@ -138,7 +136,7 @@
 
     curl = curl_easy_init();
 
-       
+
     httpAssembleURI(HTTP_URI_CODING_ALL, baseurl, sizeof(baseurl), scheme, NULL, host, port, resource);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -146,7 +144,7 @@
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_URL, baseurl);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
- 
+
     /*
      * Loop forever until we run out of events...
      */
@@ -157,7 +155,7 @@
         /*
          * Read the next event...
          */
-         
+
         event = ippNew();
         while ((state = ippReadFile(0, event)) != IPP_DATA)
         {
